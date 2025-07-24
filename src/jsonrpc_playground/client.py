@@ -44,7 +44,7 @@ class JSONRPCPlaygroundApp:
         /* Main container styling */
         .main .block-container {
             max-width: 1200px;
-            padding-top: 2rem;
+            padding-top: 0.5rem;
             padding-left: 0.5rem;
             padding-right: 0.5rem;
             font-family: 'Inter', sans-serif;
@@ -55,7 +55,8 @@ class JSONRPCPlaygroundApp:
             font-size: 3rem;
             font-weight: 700;
             text-align: center;
-            margin-bottom: 0.5rem;
+            margin-top: 0;
+            margin-bottom: 0.25rem;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -64,30 +65,24 @@ class JSONRPCPlaygroundApp:
         }
         
         .subtitle {
-            font-size: 1.2rem;
+            font-size: 1rem;
             text-align: center;
-            margin-bottom: 2rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
             opacity: 0.8;
             font-weight: 400;
         }
         
-        /* Developer credit styling */
-        .developer-credit {
+        /* Simple developer credit styling */
+        .simple-credit {
             text-align: center;
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 1rem;
-            margin-bottom: 1.5rem;
-            font-weight: 500;
+            font-size: 0.85rem;
+            color: #777;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-weight: 400;
             font-family: 'Inter', sans-serif;
-        }
-        
-        .developer-credit .highlight {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 600;
+            opacity: 0.8;
         }
         
         /* Modern card styling */
@@ -235,19 +230,6 @@ class JSONRPCPlaygroundApp:
                 flex: 1;
             }
             
-            /* Responsive metrics */
-            .metric-container .metric-value {
-                font-size: 0.8rem !important;
-            }
-            
-            .metric-container .metric-label {
-                font-size: 0.7rem !important;
-            }
-            
-            .metric-container .metric-delta {
-                font-size: 0.6rem !important;
-            }
-            
             /* Better spacing for mobile */
             .stExpander {
                 margin-bottom: 1rem !important;
@@ -304,11 +286,8 @@ class JSONRPCPlaygroundApp:
         with tab3:
             self._render_error_scenarios_tab()
 
-        # Footer credit
-        self._render_footer()
-
     def _render_header(self):
-        """Render the application header with modern design."""
+        """Render the application header."""
         # Main title with gradient
         st.markdown(
             '<div class="main-title">🧩 JSON-RPC Playground</div>',
@@ -316,40 +295,20 @@ class JSONRPCPlaygroundApp:
         )
         st.markdown(
             '<div class="subtitle">'
-            "Interactive learning tool for JSON-RPC 2.0 protocol • "
-            "Perfect for beginners and professionals"
+            "Interactive learning tool for JSON-RPC 2.0 protocol"
             "</div>",
             unsafe_allow_html=True,
         )
 
-        # Quick stats or highlights - max 2 columns per row for better responsiveness
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.metric(label="Protocol", value="JSON-RPC 2.0", delta="Standard")
-
-        with col2:
-            st.metric(label="Features", value="Essential", delta="Coverage")
-
-        col3, col4 = st.columns(2)
-
-        with col3:
-            st.metric(label="Learning", value="Interactive", delta="Hands-on")
-
-        with col4:
-            st.metric(label="Difficulty", value="Beginner", delta="Friendly")
-
-        # Developer credit
+        # Simple developer credit below tagline
         st.markdown(
-            '<div class="developer-credit">Developed by <span class="highlight">M Rehan ul Haq</span></div>',
+            '<div class="simple-credit">Developed by M Rehan ul Haq</div>',
             unsafe_allow_html=True,
         )
 
-        st.divider()
-
     def _render_learning_tips(self):
         """Render the learning tips section."""
-        with st.expander("💡 Quick Learning Tips", expanded=False):
+        with st.expander("💡 **Quick Learning Tips**", expanded=False):
             st.markdown(
                 """
             **🎯 Start Here:**
@@ -985,18 +944,26 @@ class JSONRPCPlaygroundApp:
             "Enter your message to log:",
             value="",
             key="log_message_tab",
-            placeholder="Type a message to send to the server...",
-            help="This message will be stored on the server but you won't get a response",
+            placeholder="Type a message and press Enter...",
+            help="Type your message and press Enter to enable the buttons below",
         )
+        
+        # Show clear instructions
+        if not message.strip():
+            st.info("� Type a message above and press **Enter** to enable the buttons below")
 
-        if message.strip():
-            params = {"message": message}
-            request_payload = {
-                "jsonrpc": "2.0",
-                "method": "log_message",
-                "params": params,
-            }
-
+        # Always show the UI structure, but disable/enable based on message
+        has_message = bool(message.strip())
+        
+        # Create request payload regardless (for consistency)
+        params = {"message": message} if has_message else {"message": ""}
+        request_payload = {
+            "jsonrpc": "2.0",
+            "method": "log_message",
+            "params": params,
+        }
+        
+        if has_message:
             # Show parameter structure
             st.markdown("**📋 This will create the following notification:**")
             st.code(json.dumps(params, indent=2), language="json")
@@ -1007,31 +974,34 @@ class JSONRPCPlaygroundApp:
             # Action buttons
             st.success("**🚀 Ready to send your notification?**")
 
-            btn_col1, btn_col2 = st.columns([1, 1])
-            with btn_col1:
-                view_req_log_clicked = st.button(
-                    "🔍 View Raw Request",
-                    key="view_req_log",
-                    use_container_width=True,
-                    type="secondary",
-                    help="See the exact JSON that will be sent (notice: no 'id' field!)",
-                )
-            with btn_col2:
-                send_log_clicked = st.button(
-                    "📡 Send Notification",
-                    key="send_log",
-                    use_container_width=True,
-                    type="primary",
-                    help="Fire and forget - send message without expecting response",
-                )
+        # Always show buttons, but disable them when no message
+        btn_col1, btn_col2 = st.columns([1, 1])
+        with btn_col1:
+            view_req_log_clicked = st.button(
+                "🔍 View Raw Request",
+                key="view_req_log",
+                use_container_width=True,
+                type="secondary",
+                disabled=not has_message,
+                help="See the exact JSON that will be sent (notice: no 'id' field!)",
+            )
+        with btn_col2:
+            send_log_clicked = st.button(
+                "📡 Send Notification",
+                key="send_log",
+                use_container_width=True,
+                type="primary",
+                disabled=not has_message,
+                help="Fire and forget - send message without expecting response",
+            )
 
+        # Handle button clicks only if message exists
+        if has_message:
             if view_req_log_clicked:
                 st.code(json.dumps(request_payload, indent=2), language="json")
 
             if send_log_clicked:
                 self._send_notification(request_payload)
-        else:
-            st.info("💡 Enter a message above to enable the notification buttons.")
 
     def _render_error_scenarios_tab(self):
         """Render the error scenarios tab."""
@@ -1072,8 +1042,8 @@ class JSONRPCPlaygroundApp:
                 st.markdown("**⚠️ Execution Errors:**")
                 st.code(
                     "-32602: Invalid Params (wrong types)\n"
-                    "-32603: Internal Error (server exception)\n"
-                    "-32000 to -32099: Custom errors"
+                    "-32000: Server Error (application exceptions)\n"
+                    "-32000 to -32099: Implementation-defined errors"
                 )
 
             # Educational value
@@ -1155,7 +1125,7 @@ class JSONRPCPlaygroundApp:
                 "📋 Invalid Request (-32600)",
                 "❓ Method Not Found (-32601)",
                 "⚠️ Invalid Params (-32602)",
-                "💥 Internal Error (-32603)",
+                "💥 Server Error (-32000)",
             ],
             key="error_scenario_tab",
             help="Each scenario shows you a different type of JSON-RPC error",
@@ -1204,13 +1174,13 @@ class JSONRPCPlaygroundApp:
             - **Real-world cause:** Input validation failures, type mismatches
             """
             )
-        elif scenario == "💥 Internal Error (-32603)":
+        elif scenario == "💥 Server Error (-32000)":
             st.warning(
                 """
-            **💥 Internal Error (-32603)**
-            - **What it is:** Server-side exception or crash
-            - **When it happens:** Unhandled exceptions in server code
-            - **Real-world cause:** Server bugs, resource limitations, database errors
+            **💥 Server Error (-32000)**
+            - **What it is:** Application-level exception in your method code
+            - **When it happens:** Unhandled exceptions in server methods (RuntimeError, ValueError, etc.)
+            - **Real-world cause:** Business logic errors, resource failures, database issues
             """
             )
 
@@ -1235,7 +1205,7 @@ class JSONRPCPlaygroundApp:
             self._handle_method_not_found()
         elif scenario == "⚠️ Invalid Params (-32602)":
             self._handle_invalid_params()
-        elif scenario == "💥 Internal Error (-32603)":
+        elif scenario == "💥 Server Error (-32000)":
             self._handle_internal_error()
 
         # Display error response if available
@@ -1248,13 +1218,19 @@ class JSONRPCPlaygroundApp:
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            st.markdown("#### � What We're Sending")
+            st.markdown("#### 📤 What We're Sending")
             st.info("🔧 **Malformed JSON** - Missing closing brace")
-            st.code(
-                '{"jsonrpc": "2.0", "method": "add", "params": {"a": 1, "b": 2}, "id": 1',
-                language="json",
-            )
-            st.warning("⚠️ Notice the missing `}` - this breaks JSON syntax!")
+            # Create the malformed JSON string manually for display (missing closing brace)
+            malformed_display = '''{
+  "jsonrpc": "2.0",
+  "method": "add",
+  "params": {
+    "a": 1,
+    "b": 2
+  },
+  "id": 1'''
+            st.code(malformed_display, language="json")
+            st.warning("⚠️ Notice the missing `}` at the end - this breaks JSON syntax!")
 
         with col2:
             st.markdown("#### 🎓 Learning Point")
@@ -1279,7 +1255,15 @@ class JSONRPCPlaygroundApp:
             use_container_width=True,
             type="primary",
         ):
-            malformed_json = '{"jsonrpc": "2.0", "method": "add", "params": {"a": 1, "b": 2}, "id": 1'
+            # Create the same malformed JSON for the actual request (missing closing brace)
+            malformed_json = '''{
+  "jsonrpc": "2.0",
+  "method": "add",
+  "params": {
+    "a": 1,
+    "b": 2
+  },
+  "id": 1'''
             try:
                 resp = requests.post(
                     self.server_url,
@@ -1292,7 +1276,7 @@ class JSONRPCPlaygroundApp:
                 except ValueError:
                     response = {"error": "Failed to parse server response"}
                 st.session_state["last_response_error"] = response
-                st.error("❌ Parse error triggered (as expected)")
+                st.success("✅ Parse error triggered (as expected)")
             except requests.RequestException as e:
                 st.session_state["last_response_error"] = {
                     "error": f"Network error: {str(e)}"
@@ -1303,15 +1287,15 @@ class JSONRPCPlaygroundApp:
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            st.markdown("#### � What We're Sending")
-            st.info("📋 **Missing Required Field** - No 'jsonrpc' field")
+            st.markdown("#### 📤 What We're Sending")
+            st.info("📋 **Missing Required Field** - No 'method' field")
             invalid_request = {
-                "method": "add",
+                "jsonrpc": "2.0",
                 "params": {"a": 1, "b": 2},
                 "id": 1,
             }
             st.code(json.dumps(invalid_request, indent=2), language="json")
-            st.warning("⚠️ Missing the required `jsonrpc: '2.0'` field!")
+            st.warning("⚠️ Missing the required `method` field!")
 
         with col2:
             st.markdown("#### 🎓 Learning Point")
@@ -1323,9 +1307,9 @@ class JSONRPCPlaygroundApp:
             - Should have an `id` for requests
             
             **Common Mistakes:**
-            - Forgetting the jsonrpc field
-            - Using wrong version number
-            - Missing required method name
+            - Missing the method field
+            - Empty method name
+            - Invalid request structure
             """
             )
 
@@ -1340,7 +1324,7 @@ class JSONRPCPlaygroundApp:
                 resp = requests.post(self.server_url, json=invalid_request, timeout=10)
                 response = resp.json()
                 st.session_state["last_response_error"] = response
-                st.error("❌ Invalid request error triggered (as expected)")
+                st.success("✅ Invalid request error triggered (as expected)")
             except (requests.RequestException, ValueError) as e:
                 st.session_state["last_response_error"] = {
                     "error": f"Network error: {str(e)}"
@@ -1391,7 +1375,7 @@ class JSONRPCPlaygroundApp:
                 )
                 response = resp.json()
                 st.session_state["last_response_error"] = response
-                st.error("❌ Method not found error triggered (as expected)")
+                st.success("✅ Method not found error triggered (as expected)")
             except (requests.RequestException, ValueError) as e:
                 st.session_state["last_response_error"] = {
                     "error": f"Network error: {str(e)}"
@@ -1403,35 +1387,35 @@ class JSONRPCPlaygroundApp:
 
         with col1:
             st.markdown("#### 📤 What We're Sending")
-            st.info("⚠️ **Wrong Parameter Types** - Strings instead of numbers")
+            st.info("⚠️ **Missing Required Parameter** - Only sending 'a', but 'add' needs both 'a' and 'b'")
             invalid_params_request = {
                 "jsonrpc": "2.0",
-                "method": "strict_add",
-                "params": {"a": "string_instead_of_int", "b": "another_string"},
+                "method": "add",
+                "params": {"a": 5},  # Missing required parameter 'b'
                 "id": 1,
             }
             st.code(json.dumps(invalid_params_request, indent=2), language="json")
-            st.warning("⚠️ `strict_add` expects integers, but we're sending strings!")
+            st.warning("⚠️ `add` method requires both 'a' and 'b' parameters!")
 
         with col2:
             st.markdown("#### 🎓 Learning Point")
             st.success(
                 """
             **Parameter Validation Errors:**
-            - Wrong data types (string vs number)
             - Missing required parameters
-            - Extra unexpected parameters
+            - Wrong number of parameters  
+            - Extra unexpected parameters (method-dependent)
             
             **Best Practices:**
-            - Validate input types before sending
-            - Check API documentation for requirements
+            - Check method signatures before calling
+            - Provide all required parameters
             - Use schema validation in production
             """
             )
 
         st.markdown("#### 🚀 Test the Scenario")
         if st.button(
-            "Send Wrong Parameter Types",
+            "Send Missing Parameter",
             key="send_invalid_params",
             use_container_width=True,
             type="primary",
@@ -1442,19 +1426,19 @@ class JSONRPCPlaygroundApp:
                 )
                 response = resp.json()
                 st.session_state["last_response_error"] = response
-                st.error("❌ Invalid params error triggered (as expected)")
+                st.success("✅ Invalid params error triggered (as expected)")
             except (requests.RequestException, ValueError) as e:
                 st.session_state["last_response_error"] = {
                     "error": f"Network error: {str(e)}"
                 }
 
     def _handle_internal_error(self):
-        """Handle internal error scenario with enhanced educational content."""
+        """Handle server error (-32000) scenario with enhanced educational content."""
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            st.markdown("#### � What We're Sending")
-            st.info("💥 **Trigger Server Exception** - Deliberate server crash")
+            st.markdown("#### 📤 What We're Sending")
+            st.info("💥 **Trigger Server Exception** - Deliberate application error")
             internal_error_request = {
                 "jsonrpc": "2.0",
                 "method": "cause_internal_error",
@@ -1462,16 +1446,22 @@ class JSONRPCPlaygroundApp:
                 "id": 1,
             }
             st.code(json.dumps(internal_error_request, indent=2), language="json")
-            st.warning("⚠️ This will cause a deliberate internal server error!")
+            st.warning("⚠️ This will cause a deliberate RuntimeError in the server method!")
 
         with col2:
             st.markdown("#### 🎓 Learning Point")
             st.success(
                 """
-            **Server-Side Errors:**
-            - Unhandled exceptions in method code
-            - Database connection failures
+            **Server Error (-32000):**
+            - Application-level exceptions (RuntimeError, ValueError, etc.)
+            - Business logic failures  
+            - Database connection issues
             - Resource exhaustion (memory, disk)
+            
+            **JSON-RPC Library Behavior:**
+            - Maps all unhandled exceptions to -32000
+            - This is the CORRECT behavior per JSON-RPC 2.0 spec
+            - Includes detailed error information in 'data' field
             
             **Error Handling:**
             - Always use try-catch in server methods
@@ -1482,7 +1472,7 @@ class JSONRPCPlaygroundApp:
 
         st.markdown("#### 🚀 Test the Scenario")
         if st.button(
-            "Trigger Internal Error",
+            "Trigger Server Error",
             key="send_internal_error",
             use_container_width=True,
             type="primary",
@@ -1493,7 +1483,7 @@ class JSONRPCPlaygroundApp:
                 )
                 response = resp.json()
                 st.session_state["last_response_error"] = response
-                st.error("❌ Internal error triggered (as expected)")
+                st.success("✅ Server error triggered (as expected)")
             except (requests.RequestException, ValueError) as e:
                 st.session_state["last_response_error"] = {
                     "error": f"Network error: {str(e)}"
@@ -1607,30 +1597,18 @@ class JSONRPCPlaygroundApp:
             # Special handling for get_log method
             if method == "get_log":
                 log_content = response["result"]
-                st.markdown(
-                    "**🎓 What you're seeing:** The server returned all logged messages"
-                )
-                st.markdown("**📋 Log Entries:**")
                 log_lines = [line for line in log_content.strip().split("\n") if line]
+                
                 if log_lines:
-                    st.markdown("**💡 Understanding the log:**")
-                    st.markdown(
-                        "- Each line represents a message sent via notification"
-                    )
-                    st.markdown("- Messages are stored in order (newest at bottom)")
-                    st.markdown("- This shows server state persistence")
-                    st.markdown(
-                        "\n".join(
-                            [
-                                f"{i+1}. {entry}"
-                                for i, entry in enumerate(reversed(log_lines))
-                            ]
-                        )
-                    )
+                    # Show clean result like other methods
+                    st.success(f"**📊 Result:** {len(log_lines)} message(s) retrieved")
+                    
+                    # Show the log entries (newest first)
+                    for i, entry in enumerate(reversed(log_lines), 1):
+                        st.markdown(f"{i}. {entry}")
                 else:
-                    st.info(
-                        "📝 **Log is empty** - No messages have been logged yet. Try sending a notification first!"
-                    )
+                    st.success("**📊 Result:** No messages in log")
+                    st.info("Log is empty - send some notifications first!")
             else:
                 # For add and greet methods
                 st.markdown("**🎯 Result Explanation:**")
@@ -1715,7 +1693,12 @@ class JSONRPCPlaygroundApp:
 
         if isinstance(response, dict) and "error" in response:
             error = response["error"]
-            error_code = error.get("code", "N/A")
+            if isinstance(error, dict):
+                error_code = error.get("code", "N/A")
+            else:
+                # Handle string errors
+                st.error(f"Error: {error}")
+                return
 
             # Error code mapping with educational context
             error_info = {
@@ -1724,6 +1707,7 @@ class JSONRPCPlaygroundApp:
                 -32601: {"name": "Method Not Found", "icon": "❓", "color": "warning"},
                 -32602: {"name": "Invalid Params", "icon": "⚠️", "color": "warning"},
                 -32603: {"name": "Internal Error", "icon": "💥", "color": "error"},
+                -32000: {"name": "Server Error", "icon": "💥", "color": "error"},
             }
 
             error_details = error_info.get(
@@ -1792,33 +1776,10 @@ class JSONRPCPlaygroundApp:
             -32600: "required JSON-RPC fields are missing",
             -32601: "the requested method doesn't exist",
             -32602: "the method parameters are invalid",
-            -32603: "an internal server error occurred",
+            -32603: "an internal JSON-RPC infrastructure error occurred",
+            -32000: "an application-level exception was thrown in the server method",
         }
         return explanations.get(error_code, "an unknown error condition")
-
-    def _render_footer(self):
-        """Render the application footer with developer credit."""
-        st.markdown("---")
-
-        # Footer with professional styling
-        st.markdown(
-            """
-            <div style="text-align: center; padding: 2rem 0 1rem 0; color: #666; font-size: 0.85rem;">
-                <p style="margin-bottom: 0.5rem;">
-                    🚀 <strong>JSON-RPC Playground</strong> - Educational Tool for Protocol Learning
-                </p>
-                <p style="margin-bottom: 0;">
-                    Crafted with ❤️ by <strong style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                    -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-                    background-clip: text;">M Rehan ul Haq</strong>
-                </p>
-                <p style="margin-top: 0.5rem; font-size: 0.75rem; opacity: 0.7;">
-                    Building tools that make complex protocols simple to learn
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
 
 
 def main():

@@ -133,11 +133,14 @@ class JSONRPCServer:
                     content_length = int(self.headers["Content-Length"])
                     request_data = self.rfile.read(content_length).decode()
 
-                    # Handle the request with JSONRPCResponseManager
+                    # Let the JSONRPCResponseManager handle all errors naturally
                     response = JSONRPCResponseManager.handle(request_data, dispatcher)
 
                     self.send_response(200)
                     self.send_header("Content-type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.send_header("Access-Control-Allow-Methods", "POST")
+                    self.send_header("Access-Control-Allow-Headers", "Content-Type")
                     self.end_headers()
 
                     # Send response data
@@ -147,38 +150,12 @@ class JSONRPCServer:
                         # This handles notifications (no response expected)
                         self.wfile.write(b"")
 
-                except (ValueError, KeyError, UnicodeDecodeError) as e:
-                    # Handle JSON parsing and encoding errors
-                    self.send_response(200)
-                    self.send_header("Content-type", "application/json")
-                    self.end_headers()
-
-                    error_response = {
-                        "jsonrpc": "2.0",
-                        "error": {
-                            "code": -32603,
-                            "message": "Internal error",
-                            "data": str(e),
-                        },
-                        "id": None,
-                    }
-                    self.wfile.write(json.dumps(error_response).encode())
                 except Exception as e:
-                    # Handle any other unexpected server-side errors
-                    self.send_response(200)
-                    self.send_header("Content-type", "application/json")
+                    # Only handle truly unexpected HTTP-level errors
+                    self.send_response(500)
+                    self.send_header("Content-type", "text/plain")
                     self.end_headers()
-
-                    error_response = {
-                        "jsonrpc": "2.0",
-                        "error": {
-                            "code": -32603,
-                            "message": "Internal error",
-                            "data": str(e),
-                        },
-                        "id": None,
-                    }
-                    self.wfile.write(json.dumps(error_response).encode())
+                    self.wfile.write(f"Server error: {str(e)}".encode())
 
         return RequestHandler
 
