@@ -1,0 +1,4 @@
+# Core dependencies for JSON-RPC Playground
+json-rpc>=1.15.0
+requests>=2.32.4
+streamlit>=1.47.0

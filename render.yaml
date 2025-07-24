@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: jsonrpc-playground
+    env: python
+    buildCommand: "pip install -r requirements-deploy.txt"
+    startCommand: "python render_app.py"
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: PORT
+        sync: false

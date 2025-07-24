@@ -1784,7 +1784,8 @@ class JSONRPCPlaygroundApp:
 
 def main():
     """Main entry point for the Streamlit app."""
-    # Default to port 4000 for backward compatibility, but allow override
+    # For deployment, use localhost:4000 (server and client run on same host)
+    # In production, both server and client run on the same container/service
     server_url = "http://localhost:4000"
     app = JSONRPCPlaygroundApp(server_url)
     app.run()
