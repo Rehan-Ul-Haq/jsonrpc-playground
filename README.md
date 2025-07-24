@@ -4,6 +4,12 @@ A modern, interactive educational tool for learning JSON-RPC 2.0 protocol with c
 
 **Developed by M Rehan ul Haq** - Making complex protocols simple to learn.
 
+## 📦 Repository
+
+**GitHub Repository:** [https://github.com/Rehan-Ul-Haq/jsonrpc-playground](https://github.com/Rehan-Ul-Haq/jsonrpc-playground)
+
+Feel free to explore the source code, contribute, or fork the project!
+
 ## 🎯 Purpose
 
 This application provides a hands-on learning experience for beginners to understand:
@@ -31,7 +37,7 @@ jsonrpc-playground
 1. **Clone and setup:**
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Rehan-Ul-Haq/jsonrpc-playground.git
    cd jsonrpc-playground
    uv sync
    ```
@@ -145,7 +151,7 @@ After using this playground, you should understand:
 
 This project welcomes contributions! Here's how to get started:
 
-1. **Fork the repository**
+1. **Fork the repository** at [https://github.com/Rehan-Ul-Haq/jsonrpc-playground](https://github.com/Rehan-Ul-Haq/jsonrpc-playground)
 2. **Install test dependencies**: `uv sync --group test --group dev`
 3. **Make your changes**
 4. **Run tests**: `python scripts/run_tests.py --all`
