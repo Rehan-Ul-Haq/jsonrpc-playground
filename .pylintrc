@@ -1,0 +1,15 @@
+[MASTER]
+# Disable specific warnings that are false positives for this project
+disable = invalid-name
+
+[MESSAGES CONTROL]
+# Allow do_POST method name as it's required by BaseHTTPRequestHandler
+good-names = do_POST
+
+[FORMAT]
+# Maximum number of characters on a single line (compatible with Streamlit apps)
+max-line-length = 120
+
+[DESIGN]
+# Allow more attributes for Streamlit apps
+max-attributes = 15

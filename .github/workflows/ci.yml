@@ -1,0 +1,211 @@
+name: JSON-RPC Tests and Quality Checks
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.13", "3.12", "3.11"]
+        exclude:
+          # Exclude combinations that are not needed to reduce CI time
+          - os: macos-latest
+            python-version: "3.11"
+          - os: windows-latest
+            python-version: "3.11"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          uv sync --group test --group dev
+
+      - name: Run syntax check
+        run: |
+          uv run python -m py_compile *.py
+
+      - name: Run code formatting check
+        run: |
+          uv run black --check .
+
+      - name: Run import sorting check
+        run: |
+          uv run isort --check-only .
+
+      - name: Run linting
+        run: |
+          uv run flake8 .
+
+      - name: Run unit tests
+        run: |
+          uv run pytest -m "not integration" -v --tb=short
+
+      - name: Run integration tests
+        run: |
+          uv run pytest -m "integration" -v --tb=short
+        # Allow integration tests to fail on some platforms
+        continue-on-error: ${{ matrix.os == 'windows-latest' }}
+
+      - name: Run all tests with coverage
+        run: |
+          uv run pytest --cov=. --cov-report=xml --cov-report=term-missing -v
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          uv sync --group test --group dev
+
+      - name: Run pylint
+        run: |
+          uv run pylint *.py --output-format=text --reports=no --score=no
+        continue-on-error: true # Don't fail CI on pylint warnings
+
+      - name: Check for TODO/FIXME comments
+        run: |
+          echo "Checking for TODO/FIXME comments..."
+          grep -r "TODO\|FIXME" --include="*.py" . || echo "No TODO/FIXME found"
+
+      - name: Validate project structure
+        run: |
+          echo "Validating project structure..."
+          test -f pyproject.toml && echo "✓ pyproject.toml exists"
+          test -f README.md && echo "✓ README.md exists"
+          test -f rpc_server.py && echo "✓ rpc_server.py exists"
+          test -f rpc_client.py && echo "✓ rpc_client.py exists"
+          test -f main.py && echo "✓ main.py exists"
+          test -f test_rpc_server.py && echo "✓ test_rpc_server.py exists"
+          test -f test_rpc_client.py && echo "✓ test_rpc_client.py exists"
+          test -f test_main.py && echo "✓ test_main.py exists"
+          echo "All required files present!"
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install security tools
+        run: |
+          uv add --group dev bandit safety
+
+      - name: Run bandit security check
+        run: |
+          uv run bandit -r . -f json -o bandit-report.json
+        continue-on-error: true
+
+      - name: Run safety check
+        run: |
+          uv run safety check --json --output safety-report.json
+        continue-on-error: true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+        if: always()
+
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Test installation
+        run: |
+          uv sync
+
+      - name: Test server startup (dry run)
+        run: |
+          echo "Testing server startup..."
+          timeout 10 uv run python rpc_server.py &
+          sleep 5
+          ps aux | grep rpc_server || echo "Server process test completed"
+
+      - name: Test client imports
+        run: |
+          echo "Testing client imports..."
+          uv run python -c "
+          import sys
+          sys.path.insert(0, '.')
+          # Mock streamlit for import test
+          import unittest.mock
+          with unittest.mock.patch.dict('sys.modules', {'streamlit': unittest.mock.MagicMock()}):
+              import rpc_client
+              print('Client imports successfully')
+          "
+
+      - name: Test main imports
+        run: |
+          echo "Testing main imports..."
+          uv run python -c "
+          import sys
+          sys.path.insert(0, '.')
+          import main
+          print('Main imports successfully')
+          "

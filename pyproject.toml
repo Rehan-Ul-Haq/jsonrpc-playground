@@ -1,0 +1,60 @@
+[project]
+name = "jsonrpc-playground"
+version = "0.1.0"
+description = "An educational tool for learning JSON-RPC 2.0 protocol with interactive examples"
+readme = "README.md"
+authors = [
+    {name = "M Rehan ul Haq", email = "mrehanulhaq3@gmail.com"}
+]
+license = {text = "MIT"}
+keywords = ["json-rpc", "educational", "api", "playground", "learning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12", 
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Education",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.11"
+dependencies = [
+    "json-rpc>=1.15.0",
+    "pytest>=8.4.1",
+    "requests>=2.32.4",
+    "streamlit>=1.47.0",
+]
+
+[project.scripts]
+jsonrpc-playground = "jsonrpc_playground.main:main"
+
+[project.urls]
+Homepage = "https://github.com/mrehanulhaq/jsonrpc-playground"
+Documentation = "https://github.com/mrehanulhaq/jsonrpc-playground/blob/main/README.md"
+Repository = "https://github.com/mrehanulhaq/jsonrpc-playground.git"
+Issues = "https://github.com/mrehanulhaq/jsonrpc-playground/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jsonrpc_playground"]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "flake8>=7.3.0",
+    "isort>=6.0.1",
+    "pylint>=3.3.7",
+]
+test = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.12.0",
+]

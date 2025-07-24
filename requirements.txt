@@ -1,0 +1,4 @@
+json-rpc>=1.15.0
+pytest>=8.4.1
+requests>=2.32.4
+streamlit>=1.47.0
